@@ -264,7 +264,9 @@ def symplectic_eigenvalues_symbolic(A):
     Returns:
     --------
     list
-        List of symplectic eigenvalues as symbolic expressions (positive values)
+        List of n/2 symplectic eigenvalues as symbolic expressions (positive values),
+        where n is the half-dimension of the 2n×2n matrix A. Returns values with
+        multiplicity preserved.
     
     Examples:
     ---------
@@ -305,16 +307,18 @@ def symplectic_eigenvalues_symbolic(A):
     # Simplify the symbolic expressions
     simplified_evals = [simplify(ev) for ev in abs_eigenvals]
     
-    # Remove duplicates by converting to a set and back
-    # For symbolic expressions, this relies on Sage's symbolic equality checking
-    unique_evals = list(set(simplified_evals))
-    
-    # Sort the unique eigenvalues (Sage can sort symbolic expressions)
+    # Sort the eigenvalues (Sage can sort symbolic expressions)
     try:
-        symplectic_evals = sorted(unique_evals)
+        sorted_evals = sorted(simplified_evals)
     except:
-        # If sorting fails (e.g., for complex symbolic expressions), return unsorted
-        symplectic_evals = unique_evals
+        # If sorting fails (e.g., for complex symbolic expressions), use unsorted
+        sorted_evals = simplified_evals
+    
+    # For a 2n×2n matrix, the eigenvalues of iΩA come in ± pairs, giving 2n values.
+    # After taking absolute values and sorting, we return the first n/2 values
+    # (with multiplicity). This gives us exactly n/2 symplectic eigenvalues.
+    count = n // 2
+    symplectic_evals = sorted_evals[:count]
     
     return symplectic_evals
 
@@ -490,6 +494,7 @@ if __name__ == "__main__":
     print(A3)
     evals3 = symplectic_eigenvalues_symbolic(A3)
     print("Symplectic eigenvalues (symbolic):", evals3)
+    print("Expected: 1 eigenvalue (n/2 = 1 for 4x4 matrix)")
     
     # Test 5: Symbolic computation with symbolic parameter
     print("\n" + "=" * 70)
@@ -504,7 +509,7 @@ if __name__ == "__main__":
     print(A4)
     evals4 = symplectic_eigenvalues_symbolic(A4)
     print("Symplectic eigenvalues (symbolic):", evals4)
-    print("Note: Result contains symbolic expression 'a'")
+    print("Note: Returns 1 eigenvalue (n/2 = 1) with symbolic expression 'a'")
     
     # Test 6: Symbolic diagonalization
     print("\n" + "=" * 70)
