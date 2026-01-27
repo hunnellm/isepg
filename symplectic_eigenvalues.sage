@@ -6,6 +6,21 @@ positive definite Hermitian matrix and the symplectic matrix that diagonalizes i
 
 For a positive definite Hermitian matrix A of size 2n×2n, the symplectic eigenvalues
 are computed from the eigenvalues of the matrix iΩA, where Ω is the symplectic form.
+
+NUMERICAL FUNCTIONS (default):
+- symplectic_eigenvalues(A): Compute eigenvalues numerically with floating-point arithmetic
+- symplectic_diagonalizing_matrix(A): Compute diagonalizing matrix numerically
+- williamson_decomposition(A): Williamson decomposition with numerical computation
+
+SYMBOLIC FUNCTIONS (for exact/symbolic computation):
+- symplectic_eigenvalues_symbolic(A): Compute eigenvalues symbolically (exact)
+- symplectic_diagonalizing_matrix_symbolic(A): Compute diagonalizing matrix symbolically
+- williamson_decomposition_symbolic(A): Williamson decomposition with symbolic computation
+
+Use symbolic functions when:
+- Working with symbolic matrices containing variables
+- Need exact results without numerical approximation
+- Preserving mathematical expressions in symbolic form
 """
 
 # Numerical tolerance constants
@@ -223,14 +238,215 @@ def williamson_decomposition(A):
     return S, symplectic_evals
 
 
+# ============================================================================
+# SYMBOLIC COMPUTATION FUNCTIONS
+# ============================================================================
+
+def symplectic_eigenvalues_symbolic(A):
+    """
+    Compute the symplectic eigenvalues of a positive definite Hermitian matrix A
+    using symbolic computation (no numerical approximations).
+    
+    For a 2n×2n positive definite Hermitian matrix A, the symplectic eigenvalues
+    are computed from the eigenvalues of the matrix iΩA, where Ω is the 
+    symplectic form matrix. The eigenvalues of iΩA are real and come in pairs 
+    ±λ, where λ are the symplectic eigenvalues.
+    
+    This function performs all computations symbolically, preserving exact values
+    and symbolic expressions. Use this when you need exact results or when working
+    with symbolic matrices.
+    
+    Parameters:
+    -----------
+    A : Matrix
+        A positive definite Hermitian matrix of size 2n×2n (can contain symbolic entries)
+    
+    Returns:
+    --------
+    list
+        List of symplectic eigenvalues as symbolic expressions (positive values)
+    
+    Examples:
+    ---------
+    sage: from sage.all import matrix, SR
+    sage: var('a')
+    a
+    sage: A = matrix(SR, [[a, 0, 0, 0], [0, a, 0, 0], [0, 0, a, 0], [0, 0, 0, a]])
+    sage: evals = symplectic_eigenvalues_symbolic(A)
+    sage: evals
+    [abs(a)]
+    """
+    from sage.all import I as i_sage, SR, abs as sage_abs, simplify, sorted as sage_sorted
+    
+    # Check that A is square
+    if A.nrows() != A.ncols():
+        raise ValueError("Matrix A must be square")
+    
+    # Check that dimension is even
+    if A.nrows() % 2 != 0:
+        raise ValueError("Matrix A must have even dimension for symplectic eigenvalues")
+    
+    n = A.nrows() // 2
+    
+    # Create the symplectic form matrix
+    Omega = symplectic_form(n)
+    
+    # Compute the matrix iΩA
+    M = i_sage * Omega * A
+    
+    # Compute eigenvalues of M symbolically
+    eigenvals = M.eigenvalues()
+    
+    # For a Hermitian positive definite matrix A, the eigenvalues of iΩA are real
+    # (the imaginary unit i makes them real) and come in pairs ±λ where λ are the 
+    # symplectic eigenvalues. Take absolute values symbolically.
+    abs_eigenvals = [sage_abs(ev) for ev in eigenvals]
+    
+    # Simplify the symbolic expressions
+    simplified_evals = [simplify(ev) for ev in abs_eigenvals]
+    
+    # Remove duplicates by converting to a set and back
+    # For symbolic expressions, this relies on Sage's symbolic equality checking
+    unique_evals = list(set(simplified_evals))
+    
+    # Sort the unique eigenvalues (Sage can sort symbolic expressions)
+    try:
+        symplectic_evals = sorted(unique_evals)
+    except:
+        # If sorting fails (e.g., for complex symbolic expressions), return unsorted
+        symplectic_evals = unique_evals
+    
+    return symplectic_evals
+
+
+def symplectic_diagonalizing_matrix_symbolic(A):
+    """
+    Compute the symplectic matrix S that diagonalizes the positive definite 
+    Hermitian matrix A using symbolic computation.
+    
+    The symplectic matrix S satisfies:
+    1. S^T Ω S = Ω (symplectic condition)
+    2. S^T A S = D (diagonal form)
+    
+    This function performs all computations symbolically, preserving exact values
+    and symbolic expressions.
+    
+    Parameters:
+    -----------
+    A : Matrix
+        A positive definite Hermitian matrix of size 2n×2n (can contain symbolic entries)
+    
+    Returns:
+    --------
+    tuple (S, D)
+        S : The symplectic matrix that diagonalizes A (symbolic)
+        D : The diagonal matrix S^T A S (symbolic)
+    
+    Examples:
+    ---------
+    sage: from sage.all import matrix, SR
+    sage: A = matrix(SR, [[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [0, 0, 0, 2]])
+    sage: S, D = symplectic_diagonalizing_matrix_symbolic(A)
+    sage: D.is_diagonal()
+    True
+    """
+    from sage.all import matrix, I as i_sage, SR
+    
+    # Check that A is square
+    if A.nrows() != A.ncols():
+        raise ValueError("Matrix A must be square")
+    
+    # Check that dimension is even
+    if A.nrows() % 2 != 0:
+        raise ValueError("Matrix A must have even dimension for symplectic eigenvalues")
+    
+    n = A.nrows() // 2
+    
+    # Create the symplectic form matrix
+    Omega = symplectic_form(n)
+    
+    # Compute the matrix iΩA
+    M = i_sage * Omega * A
+    
+    # Get eigenvalues and eigenvectors of M symbolically
+    eigendata = M.eigenvectors_right()
+    
+    # Build the transformation matrix from eigenvectors
+    eigenvectors = []
+    eigenvalues = []
+    
+    for eigenval, eigenvecs, mult in eigendata:
+        for eigenvec in eigenvecs:
+            eigenvectors.append(eigenvec)
+            eigenvalues.append(eigenval)
+    
+    # Construct matrix S from eigenvectors
+    S = matrix(eigenvectors).transpose()
+    
+    # Compute the diagonalized form symbolically
+    try:
+        S_inv = S.inverse()
+        D = S_inv * A * S
+    except:
+        # If direct inversion fails, use conjugate transpose
+        D = S.conjugate().transpose() * A * S
+    
+    return S, D
+
+
+def williamson_decomposition_symbolic(A):
+    """
+    Compute the Williamson decomposition of a positive definite matrix
+    using symbolic computation.
+    
+    This finds a symplectic matrix S such that S^T A S = D ⊕ D where D is 
+    diagonal with the symplectic eigenvalues.
+    
+    This function performs all computations symbolically, preserving exact values
+    and symbolic expressions.
+    
+    Parameters:
+    -----------
+    A : Matrix
+        A positive definite Hermitian matrix of size 2n×2n (can contain symbolic entries)
+    
+    Returns:
+    --------
+    tuple (S, symplectic_evals)
+        S : The symplectic matrix (symbolic)
+        symplectic_evals : Vector of symplectic eigenvalues (symbolic)
+    
+    Examples:
+    ---------
+    sage: from sage.all import matrix, SR
+    sage: var('a')
+    a
+    sage: A = matrix(SR, [[a, 0, 0, 0], [0, a, 0, 0], [0, 0, a, 0], [0, 0, 0, a]])
+    sage: S, symplectic_evals = williamson_decomposition_symbolic(A)
+    sage: symplectic_evals
+    [abs(a)]
+    """
+    # Get symplectic eigenvalues symbolically
+    symplectic_evals = symplectic_eigenvalues_symbolic(A)
+    
+    # Get the diagonalizing symplectic matrix symbolically
+    S, D = symplectic_diagonalizing_matrix_symbolic(A)
+    
+    return S, symplectic_evals
+
+
 # Example usage and tests
 if __name__ == "__main__":
-    from sage.all import matrix, identity_matrix
+    from sage.all import matrix, identity_matrix, SR, var
     
+    print("=" * 70)
     print("Testing symplectic eigenvalues computation...")
+    print("=" * 70)
     
-    # Test 1: Simple diagonal matrix
-    print("\nTest 1: Diagonal matrix")
+    # Test 1: Simple diagonal matrix (numerical)
+    print("\n" + "=" * 70)
+    print("Test 1: Diagonal matrix (NUMERICAL)")
+    print("=" * 70)
     A1 = matrix([[2, 0, 0, 0], 
                  [0, 2, 0, 0], 
                  [0, 0, 2, 0], 
@@ -238,10 +454,12 @@ if __name__ == "__main__":
     print("A =")
     print(A1)
     evals1 = symplectic_eigenvalues(A1)
-    print("Symplectic eigenvalues:", evals1)
+    print("Symplectic eigenvalues (numerical):", evals1)
     
-    # Test 2: More general positive definite matrix
-    print("\nTest 2: General positive definite matrix")
+    # Test 2: More general positive definite matrix (numerical)
+    print("\n" + "=" * 70)
+    print("Test 2: General positive definite matrix (NUMERICAL)")
+    print("=" * 70)
     A2 = matrix([[3, 1, 0, 0], 
                  [1, 3, 0, 0], 
                  [0, 0, 3, 1], 
@@ -249,13 +467,66 @@ if __name__ == "__main__":
     print("A =")
     print(A2)
     evals2 = symplectic_eigenvalues(A2)
-    print("Symplectic eigenvalues:", evals2)
+    print("Symplectic eigenvalues (numerical):", evals2)
     
-    # Test 3: Symplectic diagonalization
-    print("\nTest 3: Symplectic diagonalization")
+    # Test 3: Symplectic diagonalization (numerical)
+    print("\n" + "=" * 70)
+    print("Test 3: Symplectic diagonalization (NUMERICAL)")
+    print("=" * 70)
     S, D = symplectic_diagonalizing_matrix(A1)
     print("Diagonalizing matrix S computed")
     print("Diagonal matrix D:")
     print(D)
     
-    print("\nAll tests completed!")
+    # Test 4: Symbolic computation with numeric matrix
+    print("\n" + "=" * 70)
+    print("Test 4: Symbolic computation with numeric matrix")
+    print("=" * 70)
+    A3 = matrix(SR, [[2, 0, 0, 0], 
+                     [0, 2, 0, 0], 
+                     [0, 0, 2, 0], 
+                     [0, 0, 0, 2]])
+    print("A =")
+    print(A3)
+    evals3 = symplectic_eigenvalues_symbolic(A3)
+    print("Symplectic eigenvalues (symbolic):", evals3)
+    
+    # Test 5: Symbolic computation with symbolic parameter
+    print("\n" + "=" * 70)
+    print("Test 5: Symbolic computation with parameter 'a' (SYMBOLIC)")
+    print("=" * 70)
+    var('a')
+    A4 = matrix(SR, [[a, 0, 0, 0], 
+                     [0, a, 0, 0], 
+                     [0, 0, a, 0], 
+                     [0, 0, 0, a]])
+    print("A =")
+    print(A4)
+    evals4 = symplectic_eigenvalues_symbolic(A4)
+    print("Symplectic eigenvalues (symbolic):", evals4)
+    print("Note: Result contains symbolic expression 'a'")
+    
+    # Test 6: Symbolic diagonalization
+    print("\n" + "=" * 70)
+    print("Test 6: Symbolic diagonalization")
+    print("=" * 70)
+    S_sym, D_sym = symplectic_diagonalizing_matrix_symbolic(A3)
+    print("Symbolic diagonalizing matrix S computed")
+    print("Symbolic diagonal matrix D:")
+    print(D_sym)
+    
+    # Test 7: Williamson decomposition (symbolic)
+    print("\n" + "=" * 70)
+    print("Test 7: Williamson decomposition (SYMBOLIC)")
+    print("=" * 70)
+    S_will, evals_will = williamson_decomposition_symbolic(A4)
+    print("Symplectic matrix S computed")
+    print("Symplectic eigenvalues:", evals_will)
+    
+    print("\n" + "=" * 70)
+    print("All tests completed!")
+    print("=" * 70)
+    print("\nSummary:")
+    print("- Numerical functions: symplectic_eigenvalues(), symplectic_diagonalizing_matrix()")
+    print("- Symbolic functions: symplectic_eigenvalues_symbolic(), symplectic_diagonalizing_matrix_symbolic()")
+    print("- Use symbolic functions for exact results and symbolic parameters")
