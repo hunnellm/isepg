@@ -1,0 +1,179 @@
+/* Example usage of symplectic_eigenvalues.mac
+ * 
+ * This file demonstrates how to use the Maxima implementation for computing
+ * symplectic eigenvalues and related functions.
+ * 
+ * To run this file:
+ *   maxima --batch=examples_maxima.mac
+ */
+
+/* Load the symplectic eigenvalues functions */
+load("symplectic_eigenvalues.mac");
+
+/* ========================================
+ * Example 1: Simple diagonal matrix (2I)
+ * ======================================== */
+print("");
+print("========================================");
+print("Example 1: Diagonal matrix (2I)");
+print("========================================");
+
+/* Define a 4×4 diagonal matrix with all diagonal elements = 2 */
+A1: matrix([2,0,0,0], [0,2,0,0], [0,0,2,0], [0,0,0,2]);
+print("Matrix A1 = 2I:");
+print(A1);
+
+/* Compute symplectic eigenvalues */
+evals1: symplectic_eigenvalues(A1);
+print("Symplectic eigenvalues:", evals1);
+print("Expected: [2] (with multiplicity 2)");
+
+/* ========================================
+ * Example 2: Block diagonal matrix
+ * ======================================== */
+print("");
+print("========================================");
+print("Example 2: Block diagonal matrix");
+print("========================================");
+
+/* Define a block diagonal matrix with 2×2 blocks */
+A2: matrix([3,1,0,0], [1,3,0,0], [0,0,3,1], [0,0,1,3]);
+print("Matrix A2:");
+print(A2);
+
+/* Compute symplectic eigenvalues */
+evals2: symplectic_eigenvalues(A2);
+print("Symplectic eigenvalues:", evals2);
+print("Expected: [2, 4]");
+print("Explanation: Each 2×2 block [[3,1],[1,3]] has eigenvalues 2 and 4");
+
+/* ========================================
+ * Example 3: Symbolic computation
+ * ======================================== */
+print("");
+print("========================================");
+print("Example 3: Symbolic computation with parameter");
+print("========================================");
+
+/* Define a matrix with a symbolic parameter a */
+print("Let a be a positive real parameter");
+A3: matrix([a,0,0,0], [0,a,0,0], [0,0,a,0], [0,0,0,a]);
+print("Matrix A3 = aI:");
+print(A3);
+
+/* Compute symplectic eigenvalues symbolically */
+evals3: symplectic_eigenvalues(A3);
+print("Symplectic eigenvalues:", evals3);
+print("Result: The symplectic eigenvalue is a (symbolic)");
+
+/* ========================================
+ * Example 4: Symplectic form matrix
+ * ======================================== */
+print("");
+print("========================================");
+print("Example 4: Symplectic form matrix");
+print("========================================");
+
+/* Create symplectic form matrices for different dimensions */
+Omega1: symplectic_form(1);
+print("Symplectic form Ω for n=1 (2×2):");
+print(Omega1);
+
+Omega2: symplectic_form(2);
+print("Symplectic form Ω for n=2 (4×4):");
+print(Omega2);
+
+Omega3: symplectic_form(3);
+print("Symplectic form Ω for n=3 (6×6):");
+print(Omega3);
+
+/* Verify antisymmetry: Ω^T = -Ω */
+print("Verifying antisymmetry: Ω^T = -Ω");
+OmegaT: transpose(Omega2);
+check: is(equal(OmegaT, -Omega2));
+print("Omega^T = -Omega?", check);
+
+/* ========================================
+ * Example 5: Williamson decomposition
+ * ======================================== */
+print("");
+print("========================================");
+print("Example 5: Williamson decomposition");
+print("========================================");
+
+/* Use the block diagonal matrix from Example 2 */
+A4: matrix([3,1,0,0], [1,3,0,0], [0,0,3,1], [0,0,1,3]);
+print("Matrix A4:");
+print(A4);
+
+/* Compute Williamson decomposition */
+wresult: williamson_decomposition(A4);
+S: first(wresult);
+symplectic_evals: second(wresult);
+
+print("Symplectic transformation matrix S:");
+print(S);
+print("Symplectic eigenvalues:", symplectic_evals);
+
+/* ========================================
+ * Example 6: Diagonalizing matrix
+ * ======================================== */
+print("");
+print("========================================");
+print("Example 6: Symplectic diagonalizing matrix");
+print("========================================");
+
+A5: matrix([2,0,0,0], [0,2,0,0], [0,0,2,0], [0,0,0,2]);
+print("Matrix A5:");
+print(A5);
+
+/* Get the diagonalizing symplectic matrix */
+result: symplectic_diagonalizing_matrix(A5);
+S5: first(result);
+D5: second(result);
+
+print("Diagonalizing matrix S:");
+print(S5);
+print("Diagonalized form D = S^(-1) A S:");
+print(D5);
+print("Note: D should be close to diagonal (may have complex coefficients that are numerically zero)");
+
+/* ========================================
+ * Example 7: Different sized matrices
+ * ======================================== */
+print("");
+print("========================================");
+print("Example 7: 6×6 matrix example");
+print("========================================");
+
+/* Create a 6×6 diagonal matrix */
+A6: matrix([1,0,0,0,0,0], 
+           [0,2,0,0,0,0], 
+           [0,0,3,0,0,0], 
+           [0,0,0,1,0,0], 
+           [0,0,0,0,2,0], 
+           [0,0,0,0,0,3]);
+print("Matrix A6 (6×6 diagonal):");
+print(A6);
+
+/* Compute symplectic eigenvalues */
+evals6: symplectic_eigenvalues(A6);
+print("Symplectic eigenvalues:", evals6);
+
+/* ========================================
+ * Summary
+ * ======================================== */
+print("");
+print("========================================");
+print("Summary");
+print("========================================");
+print("All examples completed successfully!");
+print("");
+print("Key functions available:");
+print("  1. symplectic_form(n) - Creates the 2n×2n symplectic form matrix");
+print("  2. symplectic_eigenvalues(A) - Computes symplectic eigenvalues");
+print("  3. symplectic_diagonalizing_matrix(A) - Finds diagonalizing matrix");
+print("  4. williamson_decomposition(A) - Computes Williamson decomposition");
+print("  5. verify_symplectic(S, n) - Verifies if S is symplectic");
+print("");
+print("These functions work symbolically in Maxima!");
