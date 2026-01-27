@@ -139,7 +139,7 @@ A_symbolic = matrix(SR, [[a, 0, 0, 0],
 # Compute symplectic eigenvalues symbolically
 evals = symplectic_eigenvalues_symbolic(A_symbolic)
 print("Symplectic eigenvalues:", evals)
-# Output: [abs(a)] - symbolic result!
+# Output: [abs(a), abs(a)] - returns n = 2 symplectic eigenvalues for 4x4 matrix
 
 # Get the symplectic diagonalizing matrix (symbolic)
 S, D = symplectic_diagonalizing_matrix_symbolic(A_symbolic)
@@ -245,7 +245,7 @@ Computes the symplectic eigenvalues of a positive definite Hermitian matrix A sy
 - `A`: A positive definite Hermitian matrix of size 2n×2n (can contain symbolic entries)
 
 **Returns:**
-- List of symplectic eigenvalues as symbolic expressions (positive values)
+- List of n symplectic eigenvalues as symbolic expressions (positive values), where n is the half-dimension of the matrix. Returns values with multiplicity preserved.
 
 **Available in:** SageMath (use `symplectic_eigenvalues()` in Maxima)
 
