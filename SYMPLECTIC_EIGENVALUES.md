@@ -16,6 +16,8 @@ The eigenvalues of **iΩA** come in pairs **±λ**, where **λ** are the symplec
 
 - `symplectic_eigenvalues.py` - Python/NumPy implementation (works without Sage)
 - `symplectic_eigenvalues.sage` - SageMath implementation (requires Sage)
+- `symplectic_eigenvalues.mac` - Maxima implementation (symbolic computation)
+- `examples_maxima.mac` - Comprehensive Maxima examples
 
 ## Installation
 
@@ -28,6 +30,21 @@ pip install numpy scipy
 ### For Sage version:
 
 Install SageMath from https://www.sagemath.org/
+
+### For Maxima version:
+
+Install Maxima from https://maxima.sourceforge.io/ or using your package manager:
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install maxima
+
+# macOS
+brew install maxima
+
+# Fedora
+sudo dnf install maxima
+```
 
 ## Usage
 
@@ -90,6 +107,37 @@ print("Symplectic eigenvalues:", eigenvalues)
 S, D = symplectic_diagonalizing_matrix(A)
 print("Diagonal matrix D:")
 print(D)
+```
+
+### Maxima Version (Symbolic Computation)
+
+```maxima
+/* Load the Maxima file */
+load("symplectic_eigenvalues.mac");
+
+/* Example 1: Compute symplectic eigenvalues */
+A: matrix([3,1,0,0], [1,3,0,0], [0,0,3,1], [0,0,1,3]);
+eigenvalues: symplectic_eigenvalues(A);
+/* Output: [2, 4] */
+
+/* Example 2: Symbolic computation with parameters */
+/* Define a matrix with symbolic parameter a */
+A_symbolic: matrix([a,0,0,0], [0,a,0,0], [0,0,a,0], [0,0,0,a]);
+evals: symplectic_eigenvalues(A_symbolic);
+/* Output: [abs(a)] - symbolic result! */
+
+/* Example 3: Get the symplectic form matrix */
+Omega: symplectic_form(2);
+/* Output: 4×4 antisymmetric matrix */
+
+/* Example 4: Williamson decomposition */
+result: williamson_decomposition(A);
+S: first(result);
+d: second(result);
+/* S is the symplectic matrix, d is the list of eigenvalues */
+
+/* Example 5: Run comprehensive examples */
+/* maxima --batch=examples_maxima.mac */
 ```
 
 ## Functions

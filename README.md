@@ -24,8 +24,10 @@ python3 examples.py
 ### Files
 
 - `symplectic_eigenvalues.py` - Python/NumPy implementation
-- `symplectic_eigenvalues.sage` - SageMath implementation  
+- `symplectic_eigenvalues.sage` - SageMath implementation
+- `symplectic_eigenvalues.mac` - Maxima implementation (symbolic computation)
 - `test_symplectic_eigenvalues.py` - Test suite
+- `examples_maxima.mac` - Maxima examples
 - `SYMPLECTIC_EIGENVALUES.md` - Detailed documentation
 
 ### Example Usage
