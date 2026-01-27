@@ -86,6 +86,9 @@ print("Symplectic eigenvalues:", d)
 
 ### SageMath Version
 
+The SageMath version provides both **numerical** and **symbolic** computation functions:
+
+**Numerical computation (default):**
 ```python
 # Load the Sage file
 load("symplectic_eigenvalues.sage")
@@ -99,14 +102,53 @@ A = matrix([[3, 1, 0, 0],
             [0, 0, 3, 1], 
             [0, 0, 1, 3]])
 
-# Compute symplectic eigenvalues
+# Compute symplectic eigenvalues (numerical)
 eigenvalues = symplectic_eigenvalues(A)
 print("Symplectic eigenvalues:", eigenvalues)
 
-# Get the symplectic diagonalizing matrix
+# Get the symplectic diagonalizing matrix (numerical)
 S, D = symplectic_diagonalizing_matrix(A)
 print("Diagonal matrix D:")
 print(D)
+```
+
+**Symbolic computation (exact):**
+```python
+# Load the Sage file
+load("symplectic_eigenvalues.sage")
+
+from sage.all import matrix, SR, var
+
+# Example 1: Symbolic computation with numeric values (exact)
+A = matrix(SR, [[2, 0, 0, 0], 
+                [0, 2, 0, 0], 
+                [0, 0, 2, 0], 
+                [0, 0, 0, 2]])
+
+# Compute symplectic eigenvalues symbolically (exact result)
+eigenvalues = symplectic_eigenvalues_symbolic(A)
+print("Symplectic eigenvalues (symbolic):", eigenvalues)
+
+# Example 2: Symbolic computation with parameter
+var('a')
+A_symbolic = matrix(SR, [[a, 0, 0, 0], 
+                         [0, a, 0, 0], 
+                         [0, 0, a, 0], 
+                         [0, 0, 0, a]])
+
+# Compute symplectic eigenvalues symbolically
+evals = symplectic_eigenvalues_symbolic(A_symbolic)
+print("Symplectic eigenvalues:", evals)
+# Output: [abs(a)] - symbolic result!
+
+# Get the symplectic diagonalizing matrix (symbolic)
+S, D = symplectic_diagonalizing_matrix_symbolic(A_symbolic)
+print("Diagonal matrix D:")
+print(D)
+
+# Williamson decomposition (symbolic)
+S, evals = williamson_decomposition_symbolic(A_symbolic)
+print("Symplectic eigenvalues:", evals)
 ```
 
 ### Maxima Version (Symbolic Computation)
@@ -142,7 +184,9 @@ d: second(result);
 
 ## Functions
 
-### `symplectic_form(n)`
+### Common Functions
+
+#### `symplectic_form(n)`
 Creates the standard 2n×2n symplectic form matrix Ω.
 
 **Parameters:**
@@ -151,8 +195,12 @@ Creates the standard 2n×2n symplectic form matrix Ω.
 **Returns:**
 - The 2n×2n symplectic form matrix
 
-### `symplectic_eigenvalues(A)`
-Computes the symplectic eigenvalues of a positive definite Hermitian matrix A.
+### Numerical Functions (Python/NumPy and SageMath)
+
+These functions use floating-point arithmetic for efficiency.
+
+#### `symplectic_eigenvalues(A)`
+Computes the symplectic eigenvalues of a positive definite Hermitian matrix A numerically.
 
 **Parameters:**
 - `A`: A positive definite Hermitian matrix of size 2n×2n
@@ -160,8 +208,10 @@ Computes the symplectic eigenvalues of a positive definite Hermitian matrix A.
 **Returns:**
 - Array/list of unique symplectic eigenvalues (positive real numbers), sorted
 
-### `symplectic_diagonalizing_matrix(A)`
-Computes the symplectic matrix S that diagonalizes the matrix A.
+**Available in:** Python, SageMath
+
+#### `symplectic_diagonalizing_matrix(A)`
+Computes the symplectic matrix S that diagonalizes the matrix A numerically.
 
 **Parameters:**
 - `A`: A positive definite Hermitian matrix of size 2n×2n
@@ -170,8 +220,10 @@ Computes the symplectic matrix S that diagonalizes the matrix A.
 - `S`: The symplectic matrix that diagonalizes A
 - `D`: The diagonal matrix S^T A S (or S^(-1) A S)
 
-### `williamson_decomposition(A)`
-Computes the Williamson decomposition of a positive definite matrix.
+**Available in:** Python, SageMath
+
+#### `williamson_decomposition(A)`
+Computes the Williamson decomposition of a positive definite matrix numerically.
 
 **Parameters:**
 - `A`: A positive definite Hermitian matrix of size 2n×2n
@@ -179,6 +231,52 @@ Computes the Williamson decomposition of a positive definite matrix.
 **Returns:**
 - `S`: The symplectic matrix
 - `d`: Vector of symplectic eigenvalues
+
+**Available in:** Python, SageMath
+
+### Symbolic Functions (SageMath and Maxima)
+
+These functions preserve exact values and symbolic expressions without numerical approximation.
+
+#### `symplectic_eigenvalues_symbolic(A)`
+Computes the symplectic eigenvalues of a positive definite Hermitian matrix A symbolically.
+
+**Parameters:**
+- `A`: A positive definite Hermitian matrix of size 2n×2n (can contain symbolic entries)
+
+**Returns:**
+- List of symplectic eigenvalues as symbolic expressions (positive values)
+
+**Available in:** SageMath (use `symplectic_eigenvalues()` in Maxima)
+
+**Use when:**
+- Working with symbolic matrices containing variables
+- Need exact results without numerical approximation
+- Preserving mathematical expressions in symbolic form
+
+#### `symplectic_diagonalizing_matrix_symbolic(A)`
+Computes the symplectic matrix S that diagonalizes the matrix A symbolically.
+
+**Parameters:**
+- `A`: A positive definite Hermitian matrix of size 2n×2n (can contain symbolic entries)
+
+**Returns:**
+- `S`: The symplectic matrix that diagonalizes A (symbolic)
+- `D`: The diagonal matrix S^T A S (symbolic)
+
+**Available in:** SageMath (use `symplectic_diagonalizing_matrix()` in Maxima)
+
+#### `williamson_decomposition_symbolic(A)`
+Computes the Williamson decomposition of a positive definite matrix symbolically.
+
+**Parameters:**
+- `A`: A positive definite Hermitian matrix of size 2n×2n (can contain symbolic entries)
+
+**Returns:**
+- `S`: The symplectic matrix (symbolic)
+- `d`: Vector of symplectic eigenvalues (symbolic)
+
+**Available in:** SageMath (use `williamson_decomposition()` in Maxima)
 
 ## Mathematical Background
 
