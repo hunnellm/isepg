@@ -1,4 +1,4 @@
-def gzerosgame(g,F=[],B=[]):
+def czerosgame(g,F=[],B=[]):
     S=set(F) #suspicuous vertices
     Black_vertices=set(F) # current black vertices
     again=1 # iterate again or not
@@ -60,7 +60,7 @@ def gZ_leq(graph, support=[], bannedset=[],i=None):
 	# VX is the vertices outside support now
 	for subset in Subsets(VX,j):
 		test_set=set(support).union(subset) # the set is tested to be a zero forcing set
-		outcome=gzerosgame(graph, test_set, bannedset)
+		outcome=czerosgame(graph, test_set, bannedset)
 		if len(outcome)==order:
 			return test_set
 	return False
@@ -75,7 +75,7 @@ def is_coupled_zero_forcing_set(B,G,matching):
         H.add_edge(j)
         
     #H.show(layout='circular')
-    if len(gzerosgame(H,B))==n:
+    if len(czerosgame(H,B))==n:
         return True
     return False       
 
