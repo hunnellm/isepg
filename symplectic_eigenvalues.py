@@ -16,6 +16,55 @@ from scipy import linalg
 # Numerical tolerance constants
 EIGENVALUE_TOLERANCE = 1e-10  # Threshold for filtering near-zero eigenvalues
 EIGENVALUE_PRECISION = 10     # Decimal places for rounding in duplicate detection
+MATRIX_CLEANUP_THRESHOLD = 1e-10  # Threshold for cleaning up very small real/imaginary parts
+
+
+def cleanup_small_values(matrix, threshold=MATRIX_CLEANUP_THRESHOLD):
+    """
+    Clean up very small real or imaginary parts in a matrix.
+    
+    When real or imaginary parts of matrix entries are very small (< threshold),
+    they are set to exactly zero to avoid numerical noise in output.
+    
+    Parameters:
+    -----------
+    matrix : ndarray
+        The matrix to clean up
+    threshold : float, optional
+        Values with absolute value less than this are set to zero
+    
+    Returns:
+    --------
+    ndarray
+        The cleaned matrix
+    
+    Examples:
+    ---------
+    >>> import numpy as np
+    >>> A = np.array([[1.0, 1e-15], [1e-15, 2.0]])
+    >>> cleanup_small_values(A)
+    array([[1., 0.],
+           [0., 2.]])
+    """
+    cleaned = matrix.copy()
+    
+    # Handle complex matrices
+    if np.iscomplexobj(cleaned):
+        # Clean up small real parts
+        real_part = cleaned.real
+        real_part[np.abs(real_part) < threshold] = 0.0
+        
+        # Clean up small imaginary parts
+        imag_part = cleaned.imag
+        imag_part[np.abs(imag_part) < threshold] = 0.0
+        
+        # Reconstruct the matrix
+        cleaned = real_part + 1j * imag_part
+    else:
+        # For real matrices, just clean up small values
+        cleaned[np.abs(cleaned) < threshold] = 0.0
+    
+    return cleaned
 
 
 def symplectic_form(n):
@@ -45,6 +94,10 @@ def symplectic_form(n):
     
     # Block matrix: [[0, I], [-I, 0]]
     Omega = np.block([[Z_n, I_n], [-I_n, Z_n]])
+    
+    # Clean up any -0.0 values
+    Omega = cleanup_small_values(Omega)
+    
     return Omega
 
 
@@ -173,8 +226,14 @@ def symplectic_diagonalizing_matrix(A, return_diagonal=True):
             # If inverse fails, use conjugate transpose
             D = S.conj().T @ A @ S
         
+        # Clean up very small values in S and D
+        S = cleanup_small_values(S)
+        D = cleanup_small_values(D)
+        
         return S, D
     else:
+        # Clean up very small values in S
+        S = cleanup_small_values(S)
         return S
 
 
@@ -210,6 +269,7 @@ def williamson_decomposition(A):
     # Get the diagonalizing symplectic matrix
     S, D = symplectic_diagonalizing_matrix(A)
     
+    # S and D are already cleaned by symplectic_diagonalizing_matrix
     return S, symplectic_evals
 
 

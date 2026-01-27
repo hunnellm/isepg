@@ -26,6 +26,74 @@ Use symbolic functions when:
 # Numerical tolerance constants
 EIGENVALUE_TOLERANCE = 1e-10  # Threshold for filtering near-zero eigenvalues
 EIGENVALUE_PRECISION = 10     # Decimal places for rounding in duplicate detection
+MATRIX_CLEANUP_THRESHOLD = 1e-10  # Threshold for cleaning up very small real/imaginary parts
+
+def cleanup_small_values(mat, threshold=MATRIX_CLEANUP_THRESHOLD):
+    """
+    Clean up very small real or imaginary parts in a matrix.
+    
+    When real or imaginary parts of matrix entries are very small (< threshold),
+    they are set to exactly zero to avoid numerical noise in output.
+    
+    Parameters:
+    -----------
+    mat : Matrix
+        The matrix to clean up (Sage matrix)
+    threshold : float, optional
+        Values with absolute value less than this are set to zero
+    
+    Returns:
+    --------
+    Matrix
+        The cleaned matrix
+    """
+    from sage.all import matrix, abs as sage_abs, CC, CDF, RR, RDF
+    
+    # Get the base ring
+    try:
+        base_ring = mat.base_ring()
+    except:
+        base_ring = None
+    
+    # Determine if the matrix is over a complex field
+    is_complex = base_ring in [CC, CDF] or 'Complex' in str(base_ring)
+    
+    # Create a copy of the matrix
+    cleaned = mat.parent()(mat)
+    
+    # Clean up entries
+    for i in range(cleaned.nrows()):
+        for j in range(cleaned.ncols()):
+            val = cleaned[i, j]
+            
+            # Handle complex values
+            try:
+                if is_complex or hasattr(val, 'real') and hasattr(val, 'imag'):
+                    real_part = val.real() if hasattr(val, 'real') else val
+                    imag_part = val.imag() if hasattr(val, 'imag') else 0
+                    
+                    # Clean up small real part
+                    if abs(float(real_part)) < threshold:
+                        real_part = 0
+                    
+                    # Clean up small imaginary part
+                    if abs(float(imag_part)) < threshold:
+                        imag_part = 0
+                    
+                    # Reconstruct value
+                    if imag_part == 0:
+                        cleaned[i, j] = real_part
+                    else:
+                        cleaned[i, j] = real_part + imag_part * CC.gen()
+                else:
+                    # For real values
+                    if abs(float(val)) < threshold:
+                        cleaned[i, j] = 0
+            except:
+                # If conversion fails, leave the value as is
+                pass
+    
+    return cleaned
 
 def symplectic_form(n):
     """
@@ -58,6 +126,10 @@ def symplectic_form(n):
     Z_n = matrix.zero(n)
     
     Omega = block_matrix([[Z_n, I_n], [-I_n, Z_n]])
+    
+    # Clean up any -0.0 values
+    Omega = cleanup_small_values(Omega)
+    
     return Omega
 
 
@@ -198,6 +270,10 @@ def symplectic_diagonalizing_matrix(A):
         # If direct inversion fails, use pseudoinverse or other method
         D = S.conjugate().transpose() * A * S
     
+    # Clean up very small values in S and D
+    S = cleanup_small_values(S)
+    D = cleanup_small_values(D)
+    
     return S, D
 
 
@@ -235,6 +311,7 @@ def williamson_decomposition(A):
     # Get the diagonalizing symplectic matrix
     S, D = symplectic_diagonalizing_matrix(A)
     
+    # S and D are already cleaned by symplectic_diagonalizing_matrix
     return S, symplectic_evals
 
 
@@ -395,6 +472,10 @@ def symplectic_diagonalizing_matrix_symbolic(A):
         # If direct inversion fails, use conjugate transpose
         D = S.conjugate().transpose() * A * S
     
+    # Clean up very small values in S and D
+    S = cleanup_small_values(S)
+    D = cleanup_small_values(D)
+    
     return S, D
 
 
@@ -436,6 +517,7 @@ def williamson_decomposition_symbolic(A):
     # Get the diagonalizing symplectic matrix symbolically
     S, D = symplectic_diagonalizing_matrix_symbolic(A)
     
+    # S and D are already cleaned by symplectic_diagonalizing_matrix_symbolic
     return S, symplectic_evals
 
 
