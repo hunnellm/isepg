@@ -52,7 +52,7 @@ def cleanup_small_values(mat, threshold=MATRIX_CLEANUP_THRESHOLD):
     # Get the base ring
     try:
         base_ring = mat.base_ring()
-    except:
+    except AttributeError:
         base_ring = None
     
     # Determine if the matrix is over a complex field
@@ -68,7 +68,7 @@ def cleanup_small_values(mat, threshold=MATRIX_CLEANUP_THRESHOLD):
             
             # Handle complex values
             try:
-                if is_complex or hasattr(val, 'real') and hasattr(val, 'imag'):
+                if is_complex or (hasattr(val, 'real') and hasattr(val, 'imag')):
                     real_part = val.real() if hasattr(val, 'real') else val
                     imag_part = val.imag() if hasattr(val, 'imag') else 0
                     
@@ -89,7 +89,7 @@ def cleanup_small_values(mat, threshold=MATRIX_CLEANUP_THRESHOLD):
                     # For real values
                     if abs(float(val)) < threshold:
                         cleaned[i, j] = 0
-            except:
+            except (ValueError, TypeError, AttributeError):
                 # If conversion fails, leave the value as is
                 pass
     

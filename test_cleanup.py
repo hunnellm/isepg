@@ -43,6 +43,16 @@ def test_cleanup_small_values():
     assert A_clean[1, 0] == 0.0, "Should clean up -0.0"
     print("  ✓ Negative zero cleanup works")
     
+    # Test boundary conditions
+    threshold = 1e-10
+    A_boundary = np.array([[1.0, 1e-11], [1e-9, 2.0]])  # 1e-11 < threshold, 1e-9 > threshold
+    A_clean = cleanup_small_values(A_boundary)
+    
+    assert A_clean[0, 1] == 0.0, "Should clean up value below threshold (1e-11)"
+    assert A_clean[1, 0] != 0.0, "Should preserve value above threshold (1e-9)"
+    assert np.abs(A_clean[1, 0] - 1e-9) < 1e-15, "Value above threshold should be unchanged"
+    print("  ✓ Boundary condition cleanup works")
+    
     print("✓ Passed\n")
 
 

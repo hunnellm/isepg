@@ -50,12 +50,11 @@ def cleanup_small_values(matrix, threshold=MATRIX_CLEANUP_THRESHOLD):
     
     # Handle complex matrices
     if np.iscomplexobj(cleaned):
-        # Clean up small real parts
-        real_part = cleaned.real
-        real_part[np.abs(real_part) < threshold] = 0.0
+        # Clean up small real and imaginary parts
+        real_part = cleaned.real.copy()
+        imag_part = cleaned.imag.copy()
         
-        # Clean up small imaginary parts
-        imag_part = cleaned.imag
+        real_part[np.abs(real_part) < threshold] = 0.0
         imag_part[np.abs(imag_part) < threshold] = 0.0
         
         # Reconstruct the matrix
