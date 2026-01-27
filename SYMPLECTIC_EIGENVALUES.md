@@ -314,4 +314,4 @@ This code is provided as-is for educational and research purposes.
 
 ## Contributing
 
-This repository is for computations related to the inverse symplectic eigenvalue for graphs. Contributions are welcome!
+This repository is for computations related to the inverse symplectic eigenvalue problem for graphs. Contributions are welcome!
