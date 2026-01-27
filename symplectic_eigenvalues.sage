@@ -278,7 +278,7 @@ def symplectic_eigenvalues_symbolic(A):
     sage: evals
     [abs(a), abs(a)]
     """
-    from sage.all import I as i_sage, SR, abs as sage_abs, simplify, sorted as sage_sorted
+    from sage.all import I as i_sage, SR, simplify, sorted as sage_sorted
     
     # Check that A is square
     if A.nrows() != A.ncols():
@@ -302,7 +302,7 @@ def symplectic_eigenvalues_symbolic(A):
     # For a Hermitian positive definite matrix A, the eigenvalues of iΩA are real
     # (the imaginary unit i makes them real) and come in pairs ±λ where λ are the 
     # symplectic eigenvalues. Take absolute values symbolically.
-    abs_eigenvals = [sage_abs(ev) for ev in eigenvals]
+    abs_eigenvals = [abs(ev) for ev in eigenvals]
     
     # Simplify the symbolic expressions
     simplified_evals = [simplify(ev) for ev in abs_eigenvals]
