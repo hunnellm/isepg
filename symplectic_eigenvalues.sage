@@ -355,7 +355,7 @@ def symplectic_eigenvalues_symbolic(A):
     sage: evals
     [abs(a), abs(a)]
     """
-    from sage.all import I as i_sage, SR, simplify, sorted as sage_sorted
+    from sage.all import I as i_sage, SR, simplify
     
     # Check that A is square
     if A.nrows() != A.ncols():
