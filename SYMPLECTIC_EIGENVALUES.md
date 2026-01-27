@@ -4,7 +4,7 @@ This repository provides functions to compute the symplectic eigenvalues of posi
 
 ## Overview
 
-For a positive definite Hermitian matrix **A** of size 2n×2n, the **symplectic eigenvalues** are related to the eigenvalues of the matrix **iΩA**, where **Ω** is the standard symplectic form matrix:
+For a positive definite Hermitian matrix **A** of size 2n×2n, the **symplectic eigenvalues** are computed from the eigenvalues of the matrix **iΩA**, where **Ω** is the standard symplectic form matrix:
 
 ```
 Ω = [[0, I_n], [-I_n, 0]]

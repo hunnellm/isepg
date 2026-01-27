@@ -5,13 +5,17 @@ This module provides functions to compute the symplectic eigenvalues of a
 positive definite Hermitian matrix and the symplectic matrix that diagonalizes it.
 
 For a positive definite Hermitian matrix A of size 2n×2n, the symplectic eigenvalues
-are related to the eigenvalues of the matrix |iΩA|, where Ω is the symplectic form.
+are computed from the eigenvalues of the matrix iΩA, where Ω is the symplectic form.
 
 This is a Python implementation using NumPy/SciPy that can run without Sage.
 """
 
 import numpy as np
 from scipy import linalg
+
+# Numerical tolerance constants
+EIGENVALUE_TOLERANCE = 1e-10  # Threshold for filtering near-zero eigenvalues
+EIGENVALUE_PRECISION = 10     # Decimal places for rounding in duplicate detection
 
 
 def symplectic_form(n):
@@ -49,8 +53,9 @@ def symplectic_eigenvalues(A):
     Compute the symplectic eigenvalues of a positive definite Hermitian matrix A.
     
     For a 2n×2n positive definite Hermitian matrix A, the symplectic eigenvalues
-    are computed from the eigenvalues of the matrix |iΩA|, where Ω is the 
-    symplectic form matrix.
+    are computed from the eigenvalues of the matrix iΩA, where Ω is the 
+    symplectic form matrix. The eigenvalues of iΩA are real and come in pairs 
+    ±λ, where λ are the symplectic eigenvalues.
     
     Parameters:
     -----------
@@ -90,17 +95,18 @@ def symplectic_eigenvalues(A):
     # Compute eigenvalues of M
     eigenvals = linalg.eigvals(M)
     
-    # For a real positive definite matrix A, the eigenvalues of iΩA are real
-    # and come in pairs ±λ where λ are the symplectic eigenvalues
+    # For a Hermitian positive definite matrix A, the eigenvalues of iΩA are real
+    # (the imaginary unit i makes them real) and come in pairs ±λ where λ are the 
+    # symplectic eigenvalues
     # Take the positive eigenvalues (or absolute values)
     abs_eigenvals = np.abs(eigenvals.real)
     
     # Remove duplicates by taking unique values
     # Round to avoid numerical issues with duplicate detection
-    unique_evals = np.unique(np.round(abs_eigenvals, decimals=10))
+    unique_evals = np.unique(np.round(abs_eigenvals, decimals=EIGENVALUE_PRECISION))
     
     # Filter out near-zero values
-    symplectic_evals = unique_evals[unique_evals > 1e-10]
+    symplectic_evals = unique_evals[unique_evals > EIGENVALUE_TOLERANCE]
     
     return np.sort(symplectic_evals)
 
@@ -188,23 +194,23 @@ def williamson_decomposition(A):
     --------
     S : ndarray
         The symplectic matrix
-    d : ndarray
+    symplectic_evals : ndarray
         Vector of symplectic eigenvalues
     
     Examples:
     ---------
     >>> A = np.eye(4) * 2
-    >>> S, d = williamson_decomposition(A)
-    >>> len(d)
+    >>> S, symplectic_evals = williamson_decomposition(A)
+    >>> len(symplectic_evals)
     2
     """
     # Get symplectic eigenvalues
-    d = symplectic_eigenvalues(A)
+    symplectic_evals = symplectic_eigenvalues(A)
     
     # Get the diagonalizing symplectic matrix
     S, D = symplectic_diagonalizing_matrix(A)
     
-    return S, d
+    return S, symplectic_evals
 
 
 def verify_symplectic(S, n=None):
@@ -268,7 +274,7 @@ if __name__ == "__main__":
     
     # Test 4: Verify symplectic property (if applicable)
     print("\nTest 4: Williamson decomposition")
-    S_w, d_w = williamson_decomposition(A1)
-    print("Symplectic eigenvalues from Williamson:", d_w)
+    S_w, williamson_evals = williamson_decomposition(A1)
+    print("Symplectic eigenvalues from Williamson:", williamson_evals)
     
     print("\nAll tests completed!")

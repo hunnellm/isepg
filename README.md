@@ -18,7 +18,7 @@ pip install -r requirements.txt
 python3 test_symplectic_eigenvalues.py
 
 # Run examples
-python3 symplectic_eigenvalues.py
+python3 examples.py
 ```
 
 ### Files

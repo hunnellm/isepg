@@ -5,8 +5,12 @@ This module provides functions to compute the symplectic eigenvalues of a
 positive definite Hermitian matrix and the symplectic matrix that diagonalizes it.
 
 For a positive definite Hermitian matrix A of size 2n×2n, the symplectic eigenvalues
-are related to the eigenvalues of the matrix |iΩA|, where Ω is the symplectic form.
+are computed from the eigenvalues of the matrix iΩA, where Ω is the symplectic form.
 """
+
+# Numerical tolerance constants
+EIGENVALUE_TOLERANCE = 1e-10  # Threshold for filtering near-zero eigenvalues
+EIGENVALUE_PRECISION = 10     # Decimal places for rounding in duplicate detection
 
 def symplectic_form(n):
     """
@@ -47,8 +51,9 @@ def symplectic_eigenvalues(A):
     Compute the symplectic eigenvalues of a positive definite Hermitian matrix A.
     
     For a 2n×2n positive definite Hermitian matrix A, the symplectic eigenvalues
-    are computed from the eigenvalues of the matrix |iΩA|, where Ω is the 
-    symplectic form matrix.
+    are computed from the eigenvalues of the matrix iΩA, where Ω is the 
+    symplectic form matrix. The eigenvalues of iΩA are real and come in pairs 
+    ±λ, where λ are the symplectic eigenvalues.
     
     Parameters:
     -----------
@@ -89,15 +94,16 @@ def symplectic_eigenvalues(A):
     # Compute eigenvalues of M
     eigenvals = M.eigenvalues()
     
-    # For a real positive definite matrix A, the eigenvalues of iΩA are real
-    # and come in pairs ±λ where λ are the symplectic eigenvalues
+    # For a Hermitian positive definite matrix A, the eigenvalues of iΩA are real
+    # (the imaginary unit i makes them real) and come in pairs ±λ where λ are the 
+    # symplectic eigenvalues
     abs_eigenvals = [abs(float(ev)) if hasattr(ev, '__float__') else abs(ev) for ev in eigenvals]
     
     # Remove duplicates by rounding and taking unique values
-    unique_evals = list(set([round(float(ev), 10) for ev in abs_eigenvals]))
+    unique_evals = list(set([round(float(ev), EIGENVALUE_PRECISION) for ev in abs_eigenvals]))
     
     # Filter out near-zero values and sort
-    symplectic_evals = sorted([ev for ev in unique_evals if ev > 1e-10])
+    symplectic_evals = sorted([ev for ev in unique_evals if ev > EIGENVALUE_TOLERANCE])
     
     return symplectic_evals
 
@@ -194,27 +200,27 @@ def williamson_decomposition(A):
     
     Returns:
     --------
-    tuple (S, d)
+    tuple (S, symplectic_evals)
         S : The symplectic matrix
-        d : Vector of symplectic eigenvalues
+        symplectic_evals : Vector of symplectic eigenvalues
     
     Examples:
     ---------
     sage: from sage.all import matrix
     sage: A = matrix([[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [0, 0, 0, 2]])
-    sage: S, d = williamson_decomposition(A)
-    sage: len(d)
+    sage: S, symplectic_evals = williamson_decomposition(A)
+    sage: len(symplectic_evals)
     2
     """
     from sage.all import diagonal_matrix, block_matrix, identity_matrix
     
     # Get symplectic eigenvalues
-    d = symplectic_eigenvalues(A)
+    symplectic_evals = symplectic_eigenvalues(A)
     
     # Get the diagonalizing symplectic matrix
     S, D = symplectic_diagonalizing_matrix(A)
     
-    return S, d
+    return S, symplectic_evals
 
 
 # Example usage and tests
