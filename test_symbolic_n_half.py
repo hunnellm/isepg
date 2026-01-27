@@ -1,5 +1,7 @@
 """
-Test that symplectic_eigenvalues_symbolic returns n/2 eigenvalues
+Test that symplectic_eigenvalues_symbolic returns n eigenvalues
+
+For a 2n×2n matrix, the function should return n symplectic eigenvalues.
 
 This test simulates what the symbolic version should do using NumPy.
 The actual symbolic version is in symplectic_eigenvalues.sage and requires SageMath.
@@ -19,7 +21,8 @@ def symplectic_form(n):
 
 def symplectic_eigenvalues_symbolic_simulation(A):
     """
-    Simulate the symbolic version behavior: return n/2 eigenvalues with multiplicity.
+    Simulate the symbolic version behavior: return n eigenvalues with multiplicity.
+    For a 2n×2n matrix, returns n eigenvalues.
     """
     # Check that A is square
     if A.shape[0] != A.shape[1]:
@@ -46,45 +49,45 @@ def symplectic_eigenvalues_symbolic_simulation(A):
     # Sort the eigenvalues
     sorted_evals = np.sort(abs_eigenvals)
     
-    # Return the first n/2 eigenvalues (with multiplicity)
-    count = n // 2
+    # Return the first n eigenvalues (with multiplicity)
+    count = n
     symplectic_evals = sorted_evals[:count]
     
     return symplectic_evals
 
 
 def test_identity_4x4():
-    """Test 4x4 identity matrix (n=2, should return n/2=1 eigenvalue)."""
+    """Test 4x4 identity matrix (2n=4, n=2, should return 2 eigenvalues)."""
     print("\nTest: 4x4 identity matrix")
     A = np.eye(4) * 2
-    evals = symplectic_eigenvalues_symbolic_simulation(A)
-    
-    assert len(evals) == 1, f"Should return 1 eigenvalue, got {len(evals)}"
-    assert np.allclose(evals[0], 2.0), f"Eigenvalue should be 2.0, got {evals[0]}"
-    
-    print(f"  Matrix size: 4x4 (n=2)")
-    print(f"  Returned {len(evals)} eigenvalues: {evals}")
-    print(f"  Expected: n/2 = 1 eigenvalue")
-    print("✓ Passed")
-
-
-def test_identity_8x8():
-    """Test 8x8 identity matrix (n=4, should return n/2=2 eigenvalues)."""
-    print("\nTest: 8x8 identity matrix")
-    A = np.eye(8) * 2
     evals = symplectic_eigenvalues_symbolic_simulation(A)
     
     assert len(evals) == 2, f"Should return 2 eigenvalues, got {len(evals)}"
     assert np.allclose(evals, [2.0, 2.0]), f"Eigenvalues should be [2.0, 2.0], got {evals}"
     
-    print(f"  Matrix size: 8x8 (n=4)")
+    print(f"  Matrix size: 4x4 (2n=4, n=2)")
     print(f"  Returned {len(evals)} eigenvalues: {evals}")
-    print(f"  Expected: n/2 = 2 eigenvalues")
+    print(f"  Expected: n = 2 eigenvalues")
+    print("✓ Passed")
+
+
+def test_identity_8x8():
+    """Test 8x8 identity matrix (2n=8, n=4, should return 4 eigenvalues)."""
+    print("\nTest: 8x8 identity matrix")
+    A = np.eye(8) * 2
+    evals = symplectic_eigenvalues_symbolic_simulation(A)
+    
+    assert len(evals) == 4, f"Should return 4 eigenvalues, got {len(evals)}"
+    assert np.allclose(evals, [2.0, 2.0, 2.0, 2.0]), f"Eigenvalues should be [2.0, 2.0, 2.0, 2.0], got {evals}"
+    
+    print(f"  Matrix size: 8x8 (2n=8, n=4)")
+    print(f"  Returned {len(evals)} eigenvalues: {evals}")
+    print(f"  Expected: n = 4 eigenvalues")
     print("✓ Passed")
 
 
 def test_block_diagonal_4x4():
-    """Test 4x4 block diagonal matrix (n=2, should return n/2=1 eigenvalue)."""
+    """Test 4x4 block diagonal matrix (2n=4, n=2, should return 2 eigenvalues)."""
     print("\nTest: 4x4 block diagonal matrix")
     A = np.array([[3, 1, 0, 0], 
                   [1, 3, 0, 0], 
@@ -92,36 +95,36 @@ def test_block_diagonal_4x4():
                   [0, 0, 1, 3]], dtype=float)
     evals = symplectic_eigenvalues_symbolic_simulation(A)
     
-    assert len(evals) == 1, f"Should return 1 eigenvalue, got {len(evals)}"
-    # The smallest eigenvalue should be 2
-    assert np.allclose(evals[0], 2.0), f"Eigenvalue should be ~2.0, got {evals[0]}"
+    assert len(evals) == 2, f"Should return 2 eigenvalues, got {len(evals)}"
+    # Eigenvalues are ±2 and ±4, so sorted abs gives [2, 2, 4, 4]
+    # Taking first n=2 gives [2, 2]
+    assert np.allclose(evals, [2.0, 2.0]), f"Eigenvalues should be ~[2.0, 2.0], got {evals}"
     
-    print(f"  Matrix size: 4x4 (n=2)")
+    print(f"  Matrix size: 4x4 (2n=4, n=2)")
     print(f"  Returned {len(evals)} eigenvalues: {evals}")
-    print(f"  Expected: n/2 = 1 eigenvalue")
+    print(f"  Expected: n = 2 eigenvalues")
     print("✓ Passed")
 
 
 def test_6x6():
-    """Test 6x6 matrix (n=3, should return n/2=1 eigenvalue, since n/2 = 1.5 rounds down to 1)."""
+    """Test 6x6 matrix (2n=6, n=3, should return 3 eigenvalues)."""
     print("\nTest: 6x6 identity matrix")
     A = np.eye(6) * 3
     evals = symplectic_eigenvalues_symbolic_simulation(A)
     
-    # For n=3, n//2 = 1
-    assert len(evals) == 1, f"Should return 1 eigenvalue, got {len(evals)}"
-    assert np.allclose(evals[0], 3.0), f"Eigenvalue should be 3.0, got {evals[0]}"
+    assert len(evals) == 3, f"Should return 3 eigenvalues, got {len(evals)}"
+    assert np.allclose(evals, [3.0, 3.0, 3.0]), f"Eigenvalues should be [3.0, 3.0, 3.0], got {evals}"
     
-    print(f"  Matrix size: 6x6 (n=3)")
+    print(f"  Matrix size: 6x6 (2n=6, n=3)")
     print(f"  Returned {len(evals)} eigenvalues: {evals}")
-    print(f"  Expected: n//2 = 1 eigenvalue")
+    print(f"  Expected: n = 3 eigenvalues")
     print("✓ Passed")
 
 
 def run_all_tests():
     """Run all test functions."""
     print("=" * 70)
-    print("Testing symplectic_eigenvalues_symbolic behavior (n/2 eigenvalues)")
+    print("Testing symplectic_eigenvalues_symbolic behavior (n eigenvalues)")
     print("=" * 70)
     
     test_identity_4x4()
@@ -134,6 +137,7 @@ def run_all_tests():
     print("=" * 70)
     print("\nNote: These tests simulate the expected behavior of")
     print("symplectic_eigenvalues_symbolic() which requires SageMath.")
+    print("For a 2n×2n matrix, the function returns n symplectic eigenvalues.")
 
 
 if __name__ == "__main__":
