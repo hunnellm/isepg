@@ -47,7 +47,7 @@ def cleanup_small_values(mat, threshold=MATRIX_CLEANUP_THRESHOLD):
     Matrix
         The cleaned matrix
     """
-    from sage.all import matrix, abs as sage_abs, CC, CDF, RR, RDF
+    from sage.all import matrix, CC, CDF, RR, RDF
     
     # Get the base ring
     try:
