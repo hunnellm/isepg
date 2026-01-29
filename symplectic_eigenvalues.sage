@@ -187,12 +187,15 @@ def symplectic_eigenvalues(A):
     abs_eigenvals = [abs(float(ev)) if hasattr(ev, '__float__') else abs(ev) for ev in eigenvals]
     
     # Remove duplicates by rounding and taking unique values
-    unique_evals = list(set([round(float(ev), EIGENVALUE_PRECISION) for ev in abs_eigenvals]))
+    whole_evals = [round(float(ev), EIGENVALUE_PRECISION) for ev in abs_eigenvals]
     
     # Filter out near-zero values and sort
-    symplectic_evals = sorted([ev for ev in unique_evals if ev > EIGENVALUE_TOLERANCE])
+    symplectic_evals = sorted([ev for ev in whole_evals if ev > EIGENVALUE_TOLERANCE])
+    reduced_evals = []
+    for i in range(n):
+        reduced_evals.append(symplectic_evals[2*i+1])
     
-    return symplectic_evals
+    return reduced_evals
 
 
 def symplectic_diagonalizing_matrix(A):
