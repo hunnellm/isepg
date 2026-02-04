@@ -2,9 +2,19 @@ def czerosgame(g,F=[],B=[]):
     S=set(F) #suspicuous vertices
     Black_vertices=set(F) # current black vertices
     again=1 # iterate again or not
+    V=set(g.vertices())
     while again==1:
         #print("S=",S)
         again=0
+        for y in V.difference(Black_vertices):
+            N=set(g.neighbors(y))
+            D=N.difference(Black_vertices) # set of white neighbors
+            #print(x,len(D))
+            if len(D)==0:
+                Black_vertices.add(y)
+                again=1
+                #print("vertex ",y," forced itself")
+                break
         for x in S:
             N=set(g.neighbors(x))
             
@@ -28,6 +38,7 @@ def czerosgame(g,F=[],B=[]):
                         break
     #print(Black_vertices)                    
     return(Black_vertices)
+
 
 def gZ_leq(graph, support=[], bannedset=[],i=None):
 	"""
