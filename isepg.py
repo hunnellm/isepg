@@ -108,6 +108,242 @@ def coupled_Z(G,matching,all_sets=False):
             return k
     return False       
 
+def _build_partner_map(G, matching):
+    """
+    Build and validate a partner map c from a prescribed matching.
+
+    The matching must form a perfect involution on G.vertices():
+    each vertex appears exactly once, no self-pairs are allowed,
+    and every vertex of G must be covered.
+
+    Input:
+        G       : a simple graph
+        matching: a list of 2-tuples [(u1, v1), (u2, v2), ...] covering
+                  every vertex of G exactly once
+
+    Output:
+        A dict c such that c[u] = v and c[v] = u for every (u, v) in matching.
+
+    Raises:
+        ValueError if matching is not a perfect involution on G.vertices().
+
+    Examples:
+        sage: G = graphs.PathGraph(4)
+        sage: _build_partner_map(G, [(0, 1), (2, 3)])
+        {0: 1, 1: 0, 2: 3, 3: 2}
+        sage: _build_partner_map(G, [(0, 1)])
+        Traceback (most recent call last):
+            ...
+        ValueError: matching has 1 pair(s) but graph has 4 vertices; matching must cover every vertex exactly once
+    """
+    vertices = set(G.vertices())
+    n = G.order()
+
+    if 2 * len(matching) != n:
+        raise ValueError(
+            "matching has {} pair(s) but graph has {} vertices; "
+            "matching must cover every vertex exactly once".format(len(matching), n)
+        )
+
+    c = {}
+    for pair in matching:
+        if len(pair) != 2:
+            raise ValueError(
+                "each matching element must be a 2-tuple; got {!r}".format(pair)
+            )
+        u, v = pair
+        if u == v:
+            raise ValueError(
+                "self-pair ({}, {}) is not allowed in matching".format(u, v)
+            )
+        if u not in vertices:
+            raise ValueError(
+                "vertex {!r} in matching is not a vertex of G".format(u)
+            )
+        if v not in vertices:
+            raise ValueError(
+                "vertex {!r} in matching is not a vertex of G".format(v)
+            )
+        if u in c:
+            raise ValueError(
+                "vertex {!r} appears more than once in matching".format(u)
+            )
+        if v in c:
+            raise ValueError(
+                "vertex {!r} appears more than once in matching".format(v)
+            )
+        c[u] = v
+        c[v] = u
+
+    for v in vertices:
+        if v not in c:
+            raise ValueError(
+                "vertex {!r} is not covered by the matching".format(v)
+            )
+
+    return c
+
+
+def qzerosgame(G, initial_blue, c):
+    """
+    Run the quantum zero forcing game on graph G with the given initial blue
+    set and partner map c, returning the final set of blue vertices.
+
+    The three forcing rules are applied iteratively until no new vertex
+    can be forced:
+
+    Rule 1 (standard forcing): A blue vertex v forces the unique white
+        vertex w to blue if w is the only white vertex in N(v) ∪ {c(v)}.
+
+    Rule 2 (white-vertex forcing): A white vertex w forces itself to blue
+        if every vertex in N(w) ∪ {c(w)} is already blue.
+
+    Rule 3 (double forcing): A blue vertex v forces two white vertices
+        w and c(w) simultaneously if:
+          (a) w and c(w) are the only white vertices in N(v) ∪ {c(v)}, AND
+          (b) either w has no white neighbor, or c(w) is the unique white
+              neighbor of w  (checked for both assignments of the two whites
+              as "w" and "c(w)").
+
+    Input:
+        G           : a simple graph
+        initial_blue: an iterable of initially blue vertices
+        c           : a dict partner map with c[v] = mate of v
+
+    Output:
+        A set of all blue vertices after the game terminates.
+
+    Examples:
+        sage: G = graphs.PathGraph(4)
+        sage: c = {0: 1, 1: 0, 2: 3, 3: 2}
+        sage: qzerosgame(G, [0, 2], c) == {0, 1, 2, 3}
+        True
+    """
+    Blue = set(initial_blue)
+    V = set(G.vertices())
+
+    changed = True
+    while changed:
+        changed = False
+
+        # Rule 1: standard forcing
+        for v in Blue:
+            Nv = set(G.neighbors(v)) | {c[v]}
+            white_in_Nv = Nv - Blue
+            if len(white_in_Nv) == 1:
+                Blue.add(next(iter(white_in_Nv)))
+                changed = True
+                break
+        if changed:
+            continue
+
+        # Rule 2: white-vertex forcing
+        for w in V - Blue:
+            Nw = set(G.neighbors(w)) | {c[w]}
+            if Nw.issubset(Blue):
+                Blue.add(w)
+                changed = True
+                break
+        if changed:
+            continue
+
+        # Rule 3: double forcing
+        for v in Blue:
+            Nv = set(G.neighbors(v)) | {c[v]}
+            white_in_Nv = Nv - Blue
+            if len(white_in_Nv) == 2:
+                p, q = list(white_in_Nv)
+                if c[p] == q:
+                    # Try p as "w" and q as "c(w)"
+                    white_nbrs_p = set(G.neighbors(p)) - Blue
+                    cond_p = (len(white_nbrs_p) == 0 or
+                              (len(white_nbrs_p) == 1 and q in white_nbrs_p))
+                    # Try q as "w" and p as "c(w)"
+                    white_nbrs_q = set(G.neighbors(q)) - Blue
+                    cond_q = (len(white_nbrs_q) == 0 or
+                              (len(white_nbrs_q) == 1 and p in white_nbrs_q))
+                    if cond_p or cond_q:
+                        Blue.add(p)
+                        Blue.add(q)
+                        changed = True
+                        break
+        # if changed is still False the loop terminates
+
+    return Blue
+
+
+def is_quantum_zero_forcing_set(B, G, matching):
+    """
+    Return True if B is a quantum zero forcing set of G with respect to the
+    prescribed perfect matching, and False otherwise.
+
+    Input:
+        B       : an iterable of initially blue vertices (a subset of G.vertices())
+        G       : a simple graph
+        matching: a list of 2-tuples defining a perfect matching on G.vertices()
+
+    Output:
+        True if B is a quantum zero forcing set; False otherwise.
+
+    Raises:
+        ValueError if matching is not a perfect involution on G.vertices().
+
+    Examples:
+        sage: G = graphs.PathGraph(4)
+        sage: is_quantum_zero_forcing_set([0, 2], G, [(0, 1), (2, 3)])
+        True
+        sage: is_quantum_zero_forcing_set([0], G, [(0, 1), (2, 3)])
+        False
+    """
+    c = _build_partner_map(G, matching)
+    return len(qzerosgame(G, B, c)) == G.order()
+
+
+def quantum_Z(G, matching, all_sets=False):
+    """
+    Compute the quantum zero forcing number of G with respect to the
+    prescribed perfect matching.
+
+    Input:
+        G        : a simple graph
+        matching : a list of 2-tuples defining a perfect matching on G.vertices()
+        all_sets : if False (default), return the minimum size k of a quantum
+                   zero forcing set; if True, return a list of all quantum zero
+                   forcing sets of that minimum size.
+
+    Output:
+        The minimum size of a quantum zero forcing set (all_sets=False), or
+        a list of all minimum-size quantum zero forcing sets (all_sets=True).
+        Returns False if no zero forcing set exists (should not happen for a
+        non-empty graph).
+
+    Raises:
+        ValueError if matching is not a perfect involution on G.vertices().
+
+    Examples:
+        sage: G = graphs.PathGraph(4)
+        sage: quantum_Z(G, [(0, 1), (2, 3)])
+        2
+        sage: quantum_Z(G, [(0, 1), (2, 3)], all_sets=True)
+        [{0, 2}, {0, 3}, {1, 2}, {1, 3}]
+    """
+    c = _build_partner_map(G, matching)
+    n = G.order()
+    V = G.vertices()
+    qzf_sets = []
+    complete = False
+    for k in range(n + 1):
+        for s in Subsets(V, k):
+            if len(qzerosgame(G, s, c)) == n:
+                qzf_sets.append(s)
+                complete = True
+        if complete and all_sets:
+            return qzf_sets
+        elif complete:
+            return k
+    return False
+
+
 def Jmatrix(n):
     if n%2==1:
         return False
