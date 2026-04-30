@@ -345,6 +345,118 @@ def quantum_Z(G, matching, all_sets=False):
     return False
 
 
+def perfect_matchings(obj):
+    """
+    Generator that yields all perfect matchings on the vertex set of *obj*,
+    treating the vertices as the complete graph K_{2p} (edges need not exist
+    in any underlying graph).  Each matching is yielded exactly once with no
+    redundant orderings.
+
+    A *perfect matching* is a partition of the vertex set into unordered pairs.
+    The canonical backtracking algorithm used here fixes the smallest remaining
+    vertex at each step and pairs it with each larger remaining vertex in turn,
+    so every partition is produced exactly once.
+
+    Input:
+        obj : either a Sage graph-like object that has a ``.vertices()``
+              method, or any iterable/list of vertices.
+
+    Output:
+        A generator; each yielded value is a list of 2-tuples
+        ``[(a0, b0), (a1, b1), ...]`` representing one perfect matching.
+        The order in which matchings are yielded is not guaranteed beyond
+        the canonical backtracking order.
+
+    Raises:
+        ValueError if the number of vertices is odd.
+
+    Examples:
+        sage: list(perfect_matchings([0, 1, 2, 3]))
+        [[(0, 1), (2, 3)], [(0, 2), (1, 3)], [(0, 3), (1, 2)]]
+        sage: G = graphs.PathGraph(4)
+        sage: len(list(perfect_matchings(G)))
+        3
+        sage: list(perfect_matchings([0, 1, 2]))
+        Traceback (most recent call last):
+            ...
+        ValueError: perfect_matchings requires an even number of vertices; got 3
+    """
+    if hasattr(obj, 'vertices'):
+        verts = list(obj.vertices())
+    else:
+        verts = list(obj)
+
+    if len(verts) % 2 != 0:
+        raise ValueError(
+            "perfect_matchings requires an even number of vertices; got {}".format(
+                len(verts)
+            )
+        )
+
+    def _backtrack(remaining, current):
+        if not remaining:
+            yield list(current)
+            return
+        first = remaining[0]
+        rest = remaining[1:]
+        for i, other in enumerate(rest):
+            new_remaining = rest[:i] + rest[i + 1:]
+            current.append((first, other))
+            for m in _backtrack(new_remaining, current):
+                yield m
+            current.pop()
+
+    for matching in _backtrack(verts, []):
+        yield matching
+
+
+def bipartite_matchings(G, H):
+    """
+    Generator that yields all perfect matchings between the vertex sets of
+    graphs *G* and *H* (i.e., all bijections V(G) → V(H), corresponding to
+    all perfect matchings of the complete bipartite graph K_{p,p}).
+
+    Each yielded matching is a list of pairs ``(u, v)`` where ``u`` is a
+    vertex of *G* and ``v`` is a vertex of *H*, one pair for each vertex
+    of *G*.  Every bijection between V(G) and V(H) is produced exactly once.
+
+    Input:
+        G : a Sage graph-like object with a ``.vertices()`` method
+        H : a Sage graph-like object with a ``.vertices()`` method;
+            must satisfy ``H.order() == G.order()``
+
+    Output:
+        A generator; each yielded value is a list of 2-tuples
+        ``[(u0, v_sigma(0)), (u1, v_sigma(1)), ...]`` for some permutation
+        *sigma* of V(H).  The order in which matchings are yielded is not
+        guaranteed beyond the iteration order of permutations of V(H).
+
+    Raises:
+        ValueError if G.order() != H.order().
+
+    Examples:
+        sage: G = graphs.PathGraph(3); H = graphs.CycleGraph(3)
+        sage: matchings = list(bipartite_matchings(G, H))
+        sage: len(matchings)
+        6
+        sage: matchings[0]  # one bijection between V(G) and V(H)
+        [(0, 0), (1, 1), (2, 2)]
+    """
+    if G.order() != H.order():
+        raise ValueError(
+            "bipartite_matchings requires G.order() == H.order(); "
+            "got G.order()={} and H.order()={}".format(G.order(), H.order())
+        )
+
+    from itertools import permutations
+
+    g_verts = list(G.vertices())
+    h_verts = list(H.vertices())
+
+    for h_perm in permutations(h_verts):
+        yield list(zip(g_verts, h_perm))
+
+
 def Jmatrix(n):
     if n%2==1:
         return False
