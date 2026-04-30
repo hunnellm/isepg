@@ -108,6 +108,7 @@ def coupled_Z(G,matching,all_sets=False):
             return k
     return False       
 
+
 def _build_partner_map(G, matching):
     """
     Build and validate a partner map c from a prescribed matching.
@@ -340,6 +341,7 @@ def quantum_Z(G, matching, all_sets=False):
             for s in Subsets(V, k):
                 if len(qzerosgame(G, s, c)) == n:
                     return k
+    return False
     return False
 
 
