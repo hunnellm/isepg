@@ -420,6 +420,16 @@ def bipartite_matchings(G, H):
     vertex of *G* and ``v`` is a vertex of *H*, one pair for each vertex
     of *G*.  Every bijection between V(G) and V(H) is produced exactly once.
 
+    .. note::
+
+        This function yields raw ``(u, v)`` pairs without any disjoint-union
+        tagging.  If *G* and *H* share the same vertex labels (e.g. both are
+        labelled ``0..n-1``), the returned pairs may be ambiguous because they
+        do not distinguish which graph each endpoint belongs to.  In that case,
+        use :func:`bipartite_matchings_disjoint_union` instead, which tags
+        every vertex as ``('G', u)`` or ``('H', v)`` to keep the two sides
+        unambiguous.
+
     Input:
         G : a Sage graph-like object with a ``.vertices()`` method
         H : a Sage graph-like object with a ``.vertices()`` method;
@@ -455,6 +465,83 @@ def bipartite_matchings(G, H):
 
     for h_perm in permutations(h_verts):
         yield list(zip(g_verts, h_perm))
+
+
+def bipartite_matchings_disjoint_union(G, H):
+    """
+    Generator that yields all perfect bipartite matchings between the vertex
+    sets of *G* and *H* as edges in the **disjoint union** of their vertex
+    sets.
+
+    Vertices are tagged so that ``('G', u)`` always refers to a vertex of *G*
+    and ``('H', v)`` always refers to a vertex of *H*, even when ``u == v``
+    as plain labels.  This makes the returned edges unambiguous regardless of
+    whether *G* and *H* share the same vertex labels.
+
+    Each yielded matching is a list of 2-tuples
+
+    .. code-block:: text
+
+        [( ('G', u0), ('H', v_sigma(0)) ),
+         ( ('G', u1), ('H', v_sigma(1)) ),
+         ...]
+
+    representing one perfect matching of the complete bipartite graph whose
+    left part is ``{('G', u) : u in V(G)}`` and right part is
+    ``{('H', v) : v in V(H)}``.  Every bijection between the two tagged sets
+    is produced exactly once.
+
+    Input:
+        G : a Sage graph-like object with a ``.vertices()`` method
+        H : a Sage graph-like object with a ``.vertices()`` method;
+            must satisfy ``H.order() == G.order()``
+
+    Output:
+        A generator; each yielded value is a list of 2-tuples
+        ``[( ('G', u0), ('H', v_sigma(0)) ), ...]`` for some permutation
+        *sigma* of V(H).  The order in which matchings are yielded is
+        consistent with the iteration order of permutations of V(H).
+
+    Raises:
+        ValueError if G.order() != H.order().
+
+    Examples:
+
+    Graphs with identical vertex labels still produce disjoint tagged pairs::
+
+        sage: G = graphs.PathGraph(2); H = graphs.PathGraph(2)
+        sage: matchings = list(bipartite_matchings_disjoint_union(G, H))
+        sage: len(matchings)  # 2! = 2
+        2
+        sage: matchings[0]
+        [(('G', 0), ('H', 0)), (('G', 1), ('H', 1))]
+        sage: matchings[1]
+        [(('G', 0), ('H', 1)), (('G', 1), ('H', 0))]
+
+    The number of matchings equals n! for n vertices::
+
+        sage: import math
+        sage: n = 3
+        sage: G = graphs.PathGraph(n); H = graphs.CycleGraph(n)
+        sage: matchings = list(bipartite_matchings_disjoint_union(G, H))
+        sage: len(matchings) == math.factorial(n)
+        True
+        sage: all(len(m) == n for m in matchings)
+        True
+    """
+    if G.order() != H.order():
+        raise ValueError(
+            "bipartite_matchings_disjoint_union requires G.order() == H.order(); "
+            "got G.order()={} and H.order()={}".format(G.order(), H.order())
+        )
+
+    from itertools import permutations
+
+    left_du = [('G', u) for u in G.vertices()]
+    right_du = [('H', v) for v in H.vertices()]
+
+    for perm in permutations(right_du):
+        yield list(zip(left_du, perm))
 
 
 def Jmatrix(n):
