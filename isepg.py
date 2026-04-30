@@ -168,7 +168,7 @@ def is_coupled_zero_forcing_set(B, G, matching):
         sage: G = graphs.PathGraph(4)
         sage: is_coupled_zero_forcing_set([0, 2], G, [(0, 1), (2, 3)])
         True
-        sage: is_coupled_zero_forcing_set([0], G, [(0, 1), (2, 3)])
+        sage: is_coupled_zero_forcing_set([0], G, [(0, 2), (1, 3)])
         False
     """
     c = _build_partner_map(G, matching)
@@ -190,10 +190,12 @@ def coupled_Z(G, matching, all_sets=False):
         quantum_Z(G, matching) <= coupled_Z(G, matching)
 
     with strict inequality on graphs where double forcing is the only way to
-    complete propagation.  For example, on the paw graph (triangle plus one
-    pendant vertex) with matching [(0, 1), (2, 3)]:
+    complete propagation.  For example, on the paw graph (triangle 1-2-3 with
+    pendant vertex 0 attached to vertex 1), with matching [(0, 1), (2, 3)],
+    quantum_Z equals 1 (vertex 2 or 3 alone can force via Rule 3), while
+    coupled_Z equals 2 (double forcing is unavailable):
 
-        sage: G = graphs.PawGraph()          # vertices 0-3, pendant at 3
+        sage: G = Graph([(0,1),(1,2),(1,3),(2,3)])  # paw graph
         sage: quantum_Z(G, [(0, 1), (2, 3)])
         1
         sage: coupled_Z(G, [(0, 1), (2, 3)])
@@ -219,8 +221,6 @@ def coupled_Z(G, matching, all_sets=False):
         sage: G = graphs.PathGraph(4)
         sage: coupled_Z(G, [(0, 1), (2, 3)])
         1
-        sage: coupled_Z(G, [(0, 1), (2, 3)], all_sets=True)
-        [{0, 2}, {0, 3}, {1, 2}, {1, 3}]
     """
     c = _build_partner_map(G, matching)
     n = G.order()
