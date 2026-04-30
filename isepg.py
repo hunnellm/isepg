@@ -700,3 +700,45 @@ def symp_evalues(A):
         for i in range(len(eig)):
             seig.append(eig[i].imag().abs())
         return sorted(list(set(seig)))
+
+def triangular_path(p, labels='int'):
+    r"""
+    Construct the triangular path graph TP_n on n = 2p vertices (p >= 2).
+    """
+    p = ZZ(p)
+    if p < 2:
+        raise ValueError("Parameter p must be an integer >= 2")
+
+    if labels == 'int':
+        def v(i, j): return 3*i + j
+    elif labels == 'tuple':
+        def v(i, j): return (i, j)
+    else:
+        raise ValueError("labels must be 'int' or 'tuple'")
+
+    G = Graph()
+
+    # add p-1 triangles
+    for i in range(p - 1):
+        a, b, c = v(i, 0), v(i, 1), v(i, 2)
+        G.add_edges([(a, b), (b, c), (c, a)])
+    G.show()
+    def identify_vertices(H, old, new):
+        """Merge vertex 'old' into existing vertex 'new'."""
+        if old == new:
+            return
+        for nbr in list(H.neighbors(old)):
+            if nbr != new:
+                H.add_edge(new, nbr)
+        H.delete_vertex(old)
+    
+    # chain identifications: v(i+1,0) gets merged into v(i,0)
+    for i in range(p - 2):
+        identify_vertices(G, v(i + 1, 0), v(i, 2))
+    G.show()
+    G.relabel()
+    # append a leaf to a degree-2 vertex in the first triangle: choose v(0,1)
+    leaf = (2*p-1) if labels == 'int' else ('leaf', 0)
+    G.add_edge(leaf, v(0, 1))
+
+    return G
