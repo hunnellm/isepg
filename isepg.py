@@ -330,17 +330,16 @@ def quantum_Z(G, matching, all_sets=False):
     c = _build_partner_map(G, matching)
     n = G.order()
     V = G.vertices()
-    qzf_sets = []
-    complete = False
     for k in range(n + 1):
-        for s in Subsets(V, k):
-            if len(qzerosgame(G, s, c)) == n:
-                qzf_sets.append(s)
-                complete = True
-        if complete and all_sets:
-            return qzf_sets
-        elif complete:
-            return k
+        if all_sets:
+            qzf_sets = [s for s in Subsets(V, k)
+                        if len(qzerosgame(G, s, c)) == n]
+            if qzf_sets:
+                return qzf_sets
+        else:
+            for s in Subsets(V, k):
+                if len(qzerosgame(G, s, c)) == n:
+                    return k
     return False
 
 
