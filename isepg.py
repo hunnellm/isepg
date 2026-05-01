@@ -742,3 +742,42 @@ def triangular_path(p, labels='int'):
     G.add_edge(leaf, v(0, 1))
 
     return G
+
+def quantum_fort(G, matching, size=None, fort_size=None, all_sets=False):
+    """
+    Return failing quantum zero forcing sets for G w.r.t. matching.
+
+    Exactly one of `size` or `fort_size` may be specified.
+
+    - size=k: return failing sets S with |S| = k
+    - fort_size=t: return forts V-S with |V\\S| = t  (i.e., |S| = n-t)
+
+    Returns:
+      - list of sets if all_sets=True
+      - single set (one witness) if all_sets=False
+      - False if none exist for the requested constraint
+    """
+    _build_partner_map(G, matching)  # validate
+    V = list(G.vertices())
+    n = len(V)
+
+    if size is not None and fort_size is not None:
+        raise ValueError("Specify at most one of size or comp_size.")
+    if fort_size is not None:
+        size = n - int(fort_size)
+    if size is None:
+        raise ValueError("You must specify size or comp_size.")
+
+    k = int(size)
+    if k < 0 or k > n:
+        return False
+
+    fails = []
+    for comb in combinations(V, k):
+        S = set(comb)
+        if not is_quantum_zero_forcing_set(S, G, matching):
+            if not all_sets:
+                return S
+            fails.append(set(V)-S)
+
+    return fails if fails else False
