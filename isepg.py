@@ -781,3 +781,56 @@ def quantum_fort(G, matching, size=None, fort_size=None, all_sets=False):
             fails.append(set(V)-S)
 
     return fails if fails else False
+
+def minimal_quantum_forts(G, matching, fort_size, as_sets=True):
+    """
+    Return all **minimal quantum forts** of a given size.
+
+    A quantum fort is a set F such that S = V\\F is NOT a quantum zero forcing set
+    (w.r.t. `matching`). This matches the "forts" returned by
+    `quantum_fort(G, matching, fort_size=..., all_sets=True)`.
+
+    "Minimal" means: no proper subset of F is itself a quantum fort.
+    Equivalently: for every v in F, (F - {v}) is NOT a quantum fort (regardless of size).
+    """
+    V = list(G.vertices())
+    n = len(V)
+    t = int(fort_size)
+    if t < 0 or t > n:
+        return []
+
+    forts_t = quantum_fort(G, matching, fort_size=t, all_sets=True)
+    if forts_t is False:
+        return []
+
+    minimal = []
+    for F in forts_t:
+        # Check minimality by *re-testing* fort-ness of every (t-1)-subset F\{v}
+        is_min = True
+        for v in F:
+            Fm = set(F) - {v}
+            Sm = set(V) - Fm  # complement of candidate sub-fort
+            if not is_quantum_zero_forcing_set(Sm, G, matching):
+                # Fm is a fort, so F was not minimal
+                is_min = False
+                break
+        if is_min:
+            minimal.append(set(F) if as_sets else tuple(sorted(F)))
+
+    return minimal
+
+def all_minimal_quantum_forts(G, matching, as_sets=True):
+    """
+    Return all minimal quantum forts of G w.r.t. `matching`, across all sizes.
+
+    Output is a list of forts (sets of vertices). If `as_sets` is False, returns
+    sorted tuples instead.
+    """
+    V = list(G.vertices())
+    n = len(V)
+
+    all_min_forts = []
+    for t in range(0, n + 1):
+        all_min_forts.extend(minimal_quantum_forts(G, matching, t, as_sets=as_sets))
+
+    return all_min_forts    
